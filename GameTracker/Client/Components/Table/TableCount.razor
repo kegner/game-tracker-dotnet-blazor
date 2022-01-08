@@ -1,0 +1,36 @@
+﻿@using Fluxor
+@using Fluxor.Blazor.Web.Components
+@using GameTracker.Client.Store.State
+@using GameTracker.Client.Store.Actions
+@using GameTracker.Shared.Models
+
+@inherits FluxorComponent
+@inject IDispatcher dispatcher
+@inject IState<GameState> gameState
+
+Showing @StartCount to @EndCount of @Games.Count
+
+@code {
+
+    [Parameter]
+    public double PageIndex { get; set; } = 0;
+
+    [Parameter]
+    public double ItemsPerPage { get; set; } = 5;
+
+    private List<GameDto> Games => gameState.Value.Games;
+    private double StartCount => GetStartCount();
+    private double EndCount => GetEndCount();
+
+    private double GetStartCount()
+    {
+        return (PageIndex * ItemsPerPage) + (Games.Count > 0 ? 1 : 0);
+    }
+
+    private double GetEndCount()
+    {
+        return Math.Min(Games.Count, (PageIndex + 1) * ItemsPerPage);
+    }
+
+
+}

@@ -1,0 +1,37 @@
+﻿@using Fluxor
+@using Fluxor.Blazor.Web.Components
+@using GameTracker.Client.Store.State
+@using GameTracker.Client.Store.Actions
+@using GameTracker.Shared.Models
+
+@inherits FluxorComponent
+@inject IDispatcher dispatcher
+@inject IState<GameState> gameState
+
+<tbody>
+    @foreach (GameDto game in GamesPages[(int) PageIndex])
+    {
+        <tr @key="game.Id" class="@(SelectedGame.Id == game.Id ? "table-active" : "")" @onclick="() => RowClickHandler(game)">
+            <td class="text-center">@game.Title</td>
+            <td class="text-center">@game.Status</td>
+            <td class="text-center">@game.Rating</td>
+            <td class="text-center"><DeleteButton Id="@game.Id" /></td>
+        </tr>
+    }
+</tbody>
+
+@code {
+
+    [Parameter]
+    public List<List<GameDto>> GamesPages { get; set; } = new();
+
+    [Parameter]
+    public double PageIndex { get; set; } = 0;
+
+    private GameDto SelectedGame => gameState.Value.SelectedGame;
+
+    private void RowClickHandler(GameDto game)
+    {
+        dispatcher.Dispatch(new SetSelectGameAction(game));
+    }
+}

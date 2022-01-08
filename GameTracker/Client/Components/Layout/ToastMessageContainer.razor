@@ -1,0 +1,20 @@
+﻿@using Fluxor
+@using Fluxor.Blazor.Web.Components
+@using GameTracker.Client.Store.State
+@using GameTracker.Client.Store.Actions
+@using GameTracker.Shared.Models
+
+@inherits FluxorComponent
+@inject IDispatcher dispatcher
+@inject IState<ToastState> toastState
+
+<div class="toast-container position-fixed p-3 border-0 bottom-0 end-0">
+    @foreach (Toast toast in Toasts)
+    {
+        <ToastMessage @key="toast.Id" Toast="toast" />
+    }
+</div>
+
+@code {
+    private List<Toast> Toasts => toastState.Value.Toasts;
+}

@@ -1,0 +1,123 @@
+﻿@using Fluxor
+@using Fluxor.Blazor.Web.Components
+@using GameTracker.Client.Store.State
+@using GameTracker.Client.Store.Actions
+@using GameTracker.Shared.Models
+
+@inherits FluxorComponent
+@inject CustomAuthenticationStateProvider authProvider
+@inject IDispatcher dispatcher
+@inject IState<GameState> gameState
+
+<div class="position-relative">
+    <div class="card">
+        <EditForm Model="Form" Context="gameFormContext">
+            <div class="card-header bg-dark text-white">
+                Game Form
+            </div>
+            <div class="card-body">
+                <input type="hidden" @bind="Form.Id" />
+                <div class="row mb-2">
+                    <div class="col-3">
+                        <FormItem Id="title" Label="Title" @bind-Value="Form.Title" />
+                    </div>
+                    <div class="col-3">
+                        <FormItem Id="platform" Label="Platform" @bind-Value="Form.Platform" />
+                    </div>
+                    <div class="col-3">
+                        <FormItem Id="startDate" Label="Start Date" Type="date" @bind-Value="Form.StartDate" />
+                    </div>
+                    <div class="col-3">
+                        <FormItem Id="endDate" Label="End Date" Type="date" @bind-Value="Form.EndDate" />
+                    </div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-3">
+                        <FormItem Id="status" Label="Status" @bind-Value="Form.Status" />
+                    </div>
+                    <div class="col-3">
+                        <FormItem Id="hoursToComplete" Label="Hours To Complete" Type="number" 
+                            @bind-Value="Form.HoursToComplete" />
+                    </div>
+                    <div class="col-3">
+                        <FormItem Id="rating" Label="Rating" Type="number" @bind-Value="Form.Rating" />
+                    </div>
+                    <div class="col-3">
+                        <FormItem Id="price" Label="Price" Type="number" @bind-Value="Form.Price" />
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer bg-dark text-white">
+                <div class="d-flex justify-content-end align-items-end">
+                    <button type="button" class="btn btn-primary" disabled="@(string.IsNullOrWhiteSpace(Form.Title))" 
+                            @onclick="@(() => CreateNew(gameFormContext))">
+                        Create New
+                    </button>
+                    <div class="mx-2"></div>
+                    <button type="button" class="btn btn-primary" disabled="@(string.IsNullOrWhiteSpace(Form.Id))" 
+                            @onclick="@(() => Update(gameFormContext))">
+                        Update
+                    </button>
+                </div>
+            </div>
+        </EditForm>
+    </div>
+    @if (IsSaving)
+    {
+        <Spinner />
+    }
+</div>
+
+@code {
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthStateTask { get; set; }
+
+    private GameViewModel form = new();
+    private string? userId = "";
+
+    private bool IsSaving => gameState.Value.IsSaving;
+    private GameDto SelectedGame => gameState.Value.SelectedGame;
+    private GameViewModel Form => PopulateForm();
+
+    protected override async Task OnInitializedAsync()
+    {
+        userId = await authProvider.GetClaimValue("Id", AuthStateTask);
+    }
+
+    private async Task CreateNew(EditContext context)
+    {
+        form.Id = null;
+        form.UserId = userId;
+        dispatcher.Dispatch(new CreateGameAction(form));
+        await Task.CompletedTask;
+    }
+
+    private async Task Update(EditContext conxext)
+    {
+        form.UserId = userId;
+        dispatcher.Dispatch(new UpdateGameAction(form));
+        await Task.CompletedTask;
+    }
+
+    private GameViewModel PopulateForm()
+    {
+        if (form.Id != SelectedGame.Id.ToString())
+        {
+            form = new GameViewModel()
+            {
+                Id = SelectedGame.Id.ToString(),
+                Title = SelectedGame.Title,
+                Platform = SelectedGame.Platform,
+                StartDate = SelectedGame.StartDate?.ToString("MM/dd/yyyy"),
+                EndDate = SelectedGame.EndDate?.ToString("MM/dd/yyyy"),
+                Status = SelectedGame.Status,
+                HoursToComplete = SelectedGame.HoursToComplete?.ToString(),
+                Rating = SelectedGame.Rating?.ToString(),
+                Price = SelectedGame.Price?.ToString(),
+                UserId = SelectedGame.UserId.ToString()
+            };
+        }
+
+        return form;
+    }
+}

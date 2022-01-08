@@ -1,0 +1,57 @@
+﻿@using Fluxor
+@using Fluxor.Blazor.Web.Components
+@using GameTracker.Client.Store.State
+@using GameTracker.Client.Store.Actions
+@using GameTracker.Shared.Models
+
+@inherits FluxorComponent
+@inject IDispatcher dispatcher
+@inject IState<GameState> gameState
+
+<nav aria-label="page navigation">
+    <ul class="pagination my-1">
+        <li class="page-item">
+            <button class="page-link"
+                    @onclick="() => PageButtonHandler(PageIndex - 1)"
+                    disabled="@(PageIndex == 0)">
+                Previous
+            </button>
+        </li>
+        @for (int i = 0; i < GamesPages.Count; i++)
+        {
+            int currentIndex = i;
+            <li class="page-item @(currentIndex == PageIndex ? "active" : "")">
+                <button class="page-link"
+                        @onclick="() => PageButtonHandler(currentIndex)">
+                    @(currentIndex + 1)
+                </button>
+            </li>
+        }
+        <li class="page-item">
+            <button class="page-link"
+                    @onclick="() => PageButtonHandler(PageIndex + 1)"
+                    disabled="@(PageIndex == GamesPages.Count - 1)">
+                Next
+            </button>
+        </li>
+    </ul>
+</nav>
+
+
+@code {
+
+    [Parameter]
+    public List<List<GameDto>> GamesPages { get; set; } = new();
+
+    [Parameter]
+    public double PageIndex { get; set; } = 0;
+
+    [Parameter]
+    public EventCallback<double> OnPageChange { get; set; }
+
+    public async Task PageButtonHandler(double index)
+    {
+        await OnPageChange.InvokeAsync(index);
+    }
+
+}

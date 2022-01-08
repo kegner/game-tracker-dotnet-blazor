@@ -1,0 +1,109 @@
+﻿@using Fluxor
+@using Fluxor.Blazor.Web.Components
+@using GameTracker.Client.Store.State
+@using GameTracker.Client.Store.Actions
+@using GameTracker.Shared.Models
+
+@inherits FluxorComponent
+@inject IDispatcher dispatcher
+@inject IState<GameState> gameState
+@inject CustomAuthenticationStateProvider authProvider
+
+<div class="card">
+    <div class="card-header bg-dark text-white">
+        Game Table
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-hover table-sm">
+            <caption class="visually-hidden">Game Table</caption>
+            <TableHeader />
+            <TableBody GamesPages="GamesPages" PageIndex="PageIndex" />
+            <TableFooter GamesPages="GamesPages" PageIndex="PageIndex" ItemsPerPage="itemsPerPage" OnPageChange="SetIndex" />
+        </table>
+    </div>
+    @if (IsLoading)
+    {
+        <Spinner />
+    }
+</div>
+
+@code {
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthStateTask { get; set; }
+
+    private string userId = "";
+    private double itemsPerPage = 5;
+    private double pageIndex = 0;
+    private int previousCount = 0;
+
+    private List<GameDto> Games => gameState.Value.Games;
+    private List<List<GameDto>> GamesPages => Paginate();
+    private double PageIndex => GetPageIndex();
+    private bool IsLoading => gameState.Value.IsLoading;
+
+    protected override async Task OnInitializedAsync()
+    {
+        userId = await authProvider.GetClaimValue("Id", AuthStateTask) ?? "";
+        dispatcher.Dispatch(new FetchGamesAction(long.Parse(userId)));
+        await Task.CompletedTask;
+    }
+
+    private void SetIndex(double index)
+    {
+        pageIndex = index;
+    }
+
+    private double GetPageIndex()
+    {
+        if (previousCount == 0)
+        {
+            previousCount = Games.Count;
+            return pageIndex;
+        }
+        else
+        {
+            if (previousCount < Games.Count) // add a game
+            { 
+                pageIndex = Math.Floor(Math.Max(Games.Count - 1, 0) / itemsPerPage);
+            } 
+            else if (previousCount > Games.Count) // delete a game
+            { 
+                pageIndex = Math.Min(Math.Floor(Math.Max(Games.Count - 1, 0) / itemsPerPage), pageIndex);
+            }
+
+            if (previousCount != Games.Count)
+            {
+                previousCount = Games.Count;
+            }
+            return pageIndex;
+        }
+    }
+
+    private List<List<GameDto>> Paginate()
+    {
+        itemsPerPage = Math.Max(itemsPerPage, 1);
+        List<List<GameDto>> paginatedItems = new();
+        List<GameDto> itemPage = new();
+        for (int i = 0; i < Games.Count; i++) 
+        {
+            if (i != 0 && i % itemsPerPage == 0) 
+            {
+                paginatedItems.Add(itemPage);
+                itemPage = new();
+            }
+            itemPage.Add(Games[i]);
+        }
+  
+        if (itemPage.Count > 0) 
+        {
+            paginatedItems.Add(itemPage);
+        }
+  
+        if (paginatedItems.Count == 0) 
+        {
+            paginatedItems.Add(new());
+        }
+  
+        return paginatedItems;
+    }
+}

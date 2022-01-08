@@ -1,0 +1,62 @@
+﻿@inherits LayoutComponentBase
+@inject NavigationManager navigationManager
+@inject HttpClient httpClient
+@inject CustomAuthenticationStateProvider authProvider
+
+<div>
+    <Header />
+    <div class="container">
+        <AuthorizeView>
+            <Authorized>
+                @Body
+            </Authorized>
+            <NotAuthorized>
+                @if (authState == null || (authState != null && authState.User.Identity != null 
+                    && !authState.User.Identity.IsAuthenticated))
+                {
+                    navigationManager.NavigateTo("/login");
+                }
+                else
+                {
+                    <div>You are not authorized to view this resource.</div>
+                }
+            </NotAuthorized>
+        </AuthorizeView>
+    </div>
+    <ToastMessageContainer />
+</div>
+
+@code {
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthStateTask { get; set;  }
+
+    private AuthenticationState? authState;
+
+    protected override async Task OnInitializedAsync()
+    {
+        navigationManager.LocationChanged += async (obj, lcea) =>
+        {
+            await CheckAuthOnChange();
+        };
+
+        if (AuthStateTask != null)
+        {
+            authState = await AuthStateTask;
+        }
+    }
+
+    private async Task CheckAuthOnChange()
+    {
+        // if authenticated, check again if still authenticated. If not, update the state to no longer be authenticated
+        if (authState != null && authState.User.Identity != null && authState.User.Identity.IsAuthenticated)
+        {
+            Task<AuthenticationState> task = authProvider.GetAuthenticationStateAsync();
+            authState = await task;
+            if (authState.User.Identity != null && !authState.User.Identity.IsAuthenticated)
+            {
+                authProvider.StateChanged(task);
+            }
+        }
+    }
+
+}

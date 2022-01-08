@@ -1,0 +1,55 @@
+﻿@using Fluxor
+@using Fluxor.Blazor.Web.Components
+@using GameTracker.Client.Store.State
+@using GameTracker.Client.Store.Actions
+@using GameTracker.Shared.Models
+
+@implements IDisposable
+@inherits FluxorComponent
+@inject IDispatcher dispatcher
+@inject IState<ToastState> toastState
+@inject IJSRuntime js
+
+<div @ref="toastEl" class="toast text-white @BgClass" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="d-flex">
+        <div class="toast-body">
+            @Toast.Message
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public Toast Toast { get; set; } = new();
+
+    private ElementReference toastEl;
+    private DotNetObjectReference<ToastMessage>? dotNetObjectRef;
+
+    private string BgClass => GetBgClass();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            dotNetObjectRef = DotNetObjectReference.Create<ToastMessage>(this);
+            await js.InvokeVoidAsync("showToast", dotNetObjectRef, toastEl);
+        }
+    }
+
+    [JSInvokable]
+    public void HideToast()
+    {
+        dispatcher.Dispatch(new SetHideToastAction(Toast.Id));
+    }
+
+    private string GetBgClass()
+    {
+        return Toast.IsError ? "bg-danger" : "bg-success";
+    }
+
+    void IDisposable.Dispose()
+    {
+        dispatcher.Dispatch(new SetHideToastAction(Toast.Id));
+    }
+}

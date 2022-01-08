@@ -1,0 +1,33 @@
+﻿@inherits InputBase<string>
+
+<label for="@Id-@uniqueId" class="form-label">@Label</label>
+<input id="@Id-@uniqueId" type="@Type" class="form-control @ValidClass" @bind="CurrentValueAsString" @bind:event="oninput"
+    @onblur="BlurHandler"/>
+
+@code {
+    [Parameter] public string? Id { get; set; }
+    [Parameter] public string? Label { get; set; }
+    [Parameter] public string Type { get; set; } = "text";
+    [Parameter] public bool IsRequired { get; set; } = false;
+    [Parameter] public string ValidClass { get; set; } = "";
+    [Parameter] public EventCallback<string> ValidClassChanged { get; set; }
+
+    private Guid uniqueId = Guid.NewGuid();
+
+    protected override bool TryParseValueFromString(string? value, out string result, out string validationErrorMessage)
+    {
+        result = value ?? "";
+        validationErrorMessage = "";
+        return true;
+    }
+
+    private Task BlurHandler()
+    {
+        if (IsRequired)
+        {
+            ValidClass = string.IsNullOrWhiteSpace(Value) ? "is-invalid" : "";
+            return ValidClassChanged.InvokeAsync(ValidClass);
+        }
+        return Task.CompletedTask;
+    }
+}

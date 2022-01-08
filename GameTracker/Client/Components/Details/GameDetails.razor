@@ -1,0 +1,51 @@
+﻿@using Fluxor
+@using Fluxor.Blazor.Web.Components
+@using GameTracker.Client.Store.State
+@using GameTracker.Client.Store.Actions
+@using GameTracker.Shared.Models
+
+@inherits FluxorComponent
+@inject HttpClient httpClient
+@inject CustomAuthenticationStateProvider authProvider
+@inject IDispatcher dispatcher
+@inject IState<GameState> gameState
+
+<div class="card">
+    <div class="card-header bg-dark text-white">
+        Game Details
+    </div>
+    <div class="card-body">
+        <div class="row mb-3">
+            <div class="col-3">
+                <DetailsItem Label="Title" Value="@SelectedGame.Title" />
+            </div>
+            <div class="col-3">
+                <DetailsItem Label="Platform" Value="@SelectedGame.Platform" />
+            </div>
+            <div class="col-3">
+                <DetailsItem Label="Start Date" Value="@SelectedGame.StartDate?.ToString("MM/dd/yyyy")" />
+            </div>
+            <div class="col-3">
+                <DetailsItem Label="End Date" Value="@SelectedGame.EndDate?.ToString("MM/dd/yyyy")" />
+            </div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-3">
+                <DetailsItem Label="Status" Value="@SelectedGame.Status" />
+            </div>
+            <div class="col-3">
+                <DetailsItem Label="Hours To Complete" Value="@SelectedGame.HoursToComplete.ToString()" />
+            </div>
+            <div class="col-3">
+                <DetailsItem Label="Rating" Value="@SelectedGame.Rating.ToString()" />
+            </div>
+            <div class="col-3">
+                <DetailsItem Label="Price" Value="@SelectedGame.Price?.ToString("C")" />
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private GameDto SelectedGame => gameState.Value.SelectedGame;
+}

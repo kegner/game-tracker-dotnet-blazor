@@ -1,0 +1,89 @@
+﻿@page "/signup"
+
+@using Fluxor
+@using Fluxor.Blazor.Web.Components
+@using GameTracker.Shared.Models
+@using GameTracker.Client.Store.Actions
+
+@inherits FluxorComponent
+@inject IDispatcher dispatcher
+@inject HttpClient httpClient
+@attribute [AllowAnonymous]
+@layout AnonymousLayout
+
+<EditForm Model="userForm" OnValidSubmit="HandleValidSubmit" OnInvalidSubmit="HandleInvalidSubmit">
+    <DataAnnotationsValidator />
+    <div class="row mb-4">
+        <div class="col-6">
+            <FormItem Id="firstName" Label="First Name" @bind-Value="userForm.FirstName" 
+                ValidClass="@firstNameValidClass" IsRequired=true />
+        </div>
+    </div>
+    <div class="row mb-4">
+        <div class="col-6">
+            <FormItem Id="lastName" Label="Last Name" @bind-Value="userForm.LastName" 
+                ValidClass="@lastNameValidClass" IsRequired=true />
+        </div>
+    </div>
+    <div class="row mb-4">
+        <div class="col-6">
+            <FormItem Id="email" Label="Email" @bind-Value="userForm.Email" 
+                ValidClass="@emailValidClass" IsRequired=true />
+        </div>
+    </div>
+    <div class="row mb-4">
+        <div class="col-6">
+            <FormItem Id="username" Label="Username" @bind-Value="userForm.Username"
+                ValidClass="@usernameValidClass" IsRequired=true />
+        </div>
+    </div>
+    <div class="row mb-4">
+        <div class="col-6">
+            <FormItem Id="password" Label="Password" @bind-Value="userForm.Password" 
+                Type="password" ValidClass="@passwordValidClass" IsRequired=true />
+        </div>
+    </div>
+    <div class="row mb-4">
+        <div class="col-6">
+            <button class="btn btn-primary" type="submit">Submit</button>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    private UserViewModel userForm = new();
+
+    private string firstNameValidClass = "";
+    private string lastNameValidClass = "";
+    private string emailValidClass = "";
+    private string usernameValidClass = "";
+    private string passwordValidClass = "";
+
+    private async Task HandleValidSubmit()
+    {
+        firstNameValidClass = "";
+        lastNameValidClass = "";
+        emailValidClass = "";
+        usernameValidClass = "";
+        passwordValidClass = "";
+
+        var result = await httpClient.PostAsJsonAsync<UserViewModel>("auth/signup", userForm);
+        if (result.IsSuccessStatusCode)
+        {
+            dispatcher.Dispatch(new SetShowSuccessToastAction("Sign up successful."));
+        }
+        else
+        {
+            dispatcher.Dispatch(new SetShowErrorToastAction("An error has occurred."));
+        }
+    }
+
+    private void HandleInvalidSubmit()
+    {
+        firstNameValidClass = string.IsNullOrWhiteSpace(userForm.FirstName) ? "is-invalid" : "";
+        lastNameValidClass = string.IsNullOrWhiteSpace(userForm.LastName) ? "is-invalid" : "";
+        emailValidClass = string.IsNullOrWhiteSpace(userForm.Email) ? "is-invalid" : "";
+        usernameValidClass = string.IsNullOrWhiteSpace(userForm.Username) ? "is-invalid" : "";
+        passwordValidClass = string.IsNullOrWhiteSpace(userForm.Password) ? "is-invalid" : "";
+    }
+}

@@ -1,0 +1,59 @@
+﻿@page "/login"
+
+@using Fluxor
+@using Fluxor.Blazor.Web.Components
+@using GameTracker.Shared.Models
+@using GameTracker.Client.Store.Actions
+
+@inherits FluxorComponent
+@inject IDispatcher dispatcher
+@inject NavigationManager navigationManager
+@inject HttpClient httpClient
+@inject CustomAuthenticationStateProvider authProvider
+@attribute [AllowAnonymous]
+@layout AnonymousLayout
+
+<AuthorizeView Context="authContext">
+    <Authorized>
+        <div>You are already logged in.</div>
+    </Authorized>
+    <NotAuthorized>
+        <EditForm Context="formContext" Model="userForm" OnValidSubmit="HandleSubmit">
+            <div class="row mb-4">
+                <div class="col-6">
+                    <FormItem Id="username" Label="Username" @bind-Value="userForm.Username" />
+                </div>
+            </div>
+            <div class="row mb-4">
+                <div class="col-6">
+                    <FormItem Id="password" Label="Password" @bind-Value="userForm.Password" Type="password"  />
+                </div>
+            </div>
+            <div class="row mb-4">
+                <div class="col-6">
+                    <button class="btn btn-primary" type="submit">Submit</button>
+                </div>
+            </div>
+        </EditForm>
+    </NotAuthorized>
+</AuthorizeView>
+
+
+@code {
+    private UserViewModel userForm = new();
+
+    private async void HandleSubmit()
+    {
+
+        var result = await httpClient.PostAsJsonAsync<UserViewModel>("auth/login", userForm);
+        if (result.IsSuccessStatusCode)
+        {
+            authProvider.StateChanged();
+            navigationManager.NavigateTo("/");
+        }
+        else
+        {
+            dispatcher.Dispatch(new SetShowErrorToastAction("An error has occurred."));
+        }
+    }
+}

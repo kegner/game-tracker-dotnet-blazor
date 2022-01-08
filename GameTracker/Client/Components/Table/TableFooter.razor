@@ -1,0 +1,38 @@
+﻿@using Fluxor
+@using Fluxor.Blazor.Web.Components
+@using GameTracker.Client.Store.State
+@using GameTracker.Client.Store.Actions
+@using GameTracker.Shared.Models
+
+@inherits FluxorComponent
+@inject IDispatcher dispatcher
+@inject IState<GameState> gameState
+
+<tr>
+  <td colspan="4" class="border-0">
+    <div class="d-flex">
+      <div class="align-self-center ms-1">
+        <TableCount PageIndex="PageIndex" ItemsPerPage="ItemsPerPage" />
+      </div>
+      <div class="ms-auto">
+        <TablePagination PageIndex="PageIndex" GamesPages="GamesPages" OnPageChange="OnPageChange" />
+      </div>
+    </div>
+  </td>
+</tr>
+
+@code {
+
+    [Parameter]
+    public List<List<GameDto>> GamesPages { get; set; } = new();
+
+    [Parameter]
+    public double PageIndex { get; set; } = 0;
+
+    [Parameter]
+    public double ItemsPerPage { get; set; } = 5;
+
+    [Parameter]
+    public EventCallback<double> OnPageChange { get; set; }
+
+}

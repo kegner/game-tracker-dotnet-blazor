@@ -1,0 +1,30 @@
+﻿@using Fluxor
+@using Fluxor.Blazor.Web.Components
+@using GameTracker.Client.Store.State
+@using GameTracker.Client.Store.Actions
+@using GameTracker.Shared.Models
+
+@inherits FluxorComponent
+@inject IDispatcher dispatcher
+@inject IState<GameState> gameState
+@inject CustomAuthenticationStateProvider authProvider
+
+<button class="btn btn-danger" aria-label="Delete" @onclick="() => DeleteHandler()">
+  <span class="oi oi-trash"></span>
+</button>
+
+@code {
+
+    [Parameter]
+    public long? Id { get; set; }
+
+    private async Task DeleteHandler()
+    {
+        if (Id != null)
+        {
+            dispatcher.Dispatch(new DeleteGameAction((long) Id));
+            await Task.CompletedTask;
+        }
+    }
+
+}
